@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTMLブラウザエディタ</title>
+<style>
+  /* ページ全体のレイアウト */
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* ヘッダー部分 */
+  header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  button {
+    padding: 8px 16px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+  }
+  button:hover {
+    background-color: #2980b9;
+  }
+
+  /* エディタとプレビューのコンテナ */
+  .container {
+    display: flex;
+    flex: 1;
+    overflow: hidden; /* はみ出しを隠す */
+  }
+
+  /* 左半分：エディタ領域 */
+  #editor-container {
+    width: 50%;
+    border-right: 2px solid #ccc;
+  }
+  #editor {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* 右半分：プレビュー領域 */
+  #preview-container {
+    width: 50%;
+    background-color: #fff;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span>HTMLエディタ</span>
+  <button id="update-btn">プレビューを更新</button>
+</header>
+
+<div class="container">
+  <div id="editor-container">
+    <div id="editor"></div>
+  </div>
+  <div id="preview-container">
+    <iframe id="preview"></iframe>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ext-language_tools.js"></script>
+
+<script>
+  // ==========================================
+  // 1. エディタの初期設定
+  // ==========================================
+  ace.require("ace/ext/language_tools");
+  var editor = ace.edit("editor");
+  editor.setTheme("ace/theme/monokai"); // ダークテーマ（好みに応じて変更可能）
+  editor.session.setMode("ace/mode/html");
+  
+  // 入力補完機能などのオプション設定
+  editor.setOptions({
+    enableBasicAutocompletion: true,
+    enableSnippets: true,
+    enableLiveAutocompletion: true, // 文字を打つと補完候補が出る
+    fontSize: "16px",
+    wrap: true // 右端で折り返す
+  });
+
+  // 初期テンプレート
+  var defaultCode = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<style>
+  body { font-family: sans-serif; }
+  h1 { color: #3498db; }
+</style>
+</head>
+<body>
+  <h1>Hello World!</h1>
+  <p>ここにコードを書いてみましょう。</p>
+</body>
+</html>`;
+
+  // ==========================================
+  // 2. セッション保持（LocalStorage）
+  // ==========================================
+  var STORAGE_KEY = 'saved_html_code';
+  var savedCode = localStorage.getItem(STORAGE_KEY);
+  
+  // 保存されたコードがあればそれを、なければ初期テンプレートを表示
+  if (savedCode) {
+    editor.setValue(savedCode, -1);
+  } else {
+    editor.setValue(defaultCode, -1);
+  }
+
+  // エディタの内容が変更されるたびにLocalStorageに保存する
+  editor.session.on('change', function() {
+    localStorage.setItem(STORAGE_KEY, editor.getValue());
+  });
+
+  // ==========================================
+  // 3. プレビュー更新機能
+  // ==========================================
+  function updatePreview() {
+    var code = editor.getValue();
+    var iframe = document.getElementById('preview');
+    // iframeのドキュメントを取得して書き換える
+    var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(code);
+    iframeDoc.close();
+  }
+
+  // 「プレビューを更新」ボタンをクリックしたときのイベント
+  document.getElementById('update-btn').addEventListener('click', updatePreview);
+
+  // ページ読み込み完了時に一度プレビューを表示しておく
+  updatePreview();
+</script>
+
+</body>
+</html>
