@@ -142,6 +142,15 @@
   // ==========================================
   function updatePreview() {
     var code = editor.getValue();
+    
+    // 【追加】プレビュー内のリンクをすべて「新しいタブ」で開くための設定を自動挿入
+    var baseTag = '<base target="_blank">';
+    if (code.indexOf('<head>') !== -1) {
+      code = code.replace('<head>', '<head>' + baseTag);
+    } else {
+      code = baseTag + code;
+    }
+
     var iframe = document.getElementById('preview');
     // iframeのドキュメントを取得して書き換える
     var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
